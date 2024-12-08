@@ -10,3 +10,18 @@ const part1 = data.matchAll(/mul\((\d+),(\d+)\)/g).reduce(
 );
 
 console.log(`Part1: ${part1}`);
+
+const doBlocks = data.split("do()");
+
+let enabledDoTotal = 0;
+for (const db of doBlocks) {
+  const parts = db.split("don't()");
+  const pureDo = parts[0];
+  const enabledDoBlockTotal = pureDo.matchAll(/mul\((\d+),(\d+)\)/g).reduce(
+    (p, c) => p + (Number(c[1]) * Number(c[2])),
+    0,
+  );
+  enabledDoTotal += enabledDoBlockTotal;
+}
+
+console.log(`Part2: ${enabledDoTotal}`);
