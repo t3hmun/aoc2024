@@ -44,3 +44,28 @@ console.log(`Part1: ${part1}`);
 // make an x-mas matching function for a
 // - match middle a
 // - then each diag
+
+function hasX(r: number, c: number): boolean {
+  if (lines[r + 1][c + 1] !== "A") return false;
+  const tl = lines[r][c];
+  const tr = lines[r][c + 2];
+  const bl = lines[r + 2][c];
+  const br = lines[r + 2][c + 2];
+  const l1 = (tl === "M" && br === "S") || (tl === "S" && br === "M");
+  if (!l1) return false;
+  const l2 = (tr === "M" && bl === "S") || (tr === "S" && bl === "M");
+  if (!l2) return false;
+  return true;
+}
+
+let xCount = 0;
+for (let r = 0; r <= lines.length - 3; r++) {
+  const row = lines[r];
+  for (let c = 0; c <= row.length; c++) {
+    if (hasX(r, c)) {
+      xCount++;
+    }
+  }
+}
+
+console.log(`Part2: ${xCount}`);
