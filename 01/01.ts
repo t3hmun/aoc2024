@@ -3,7 +3,7 @@ import { dirname, fromFileUrl, join } from "https://deno.land/std/path/mod.ts";
 const data = Deno.readTextFileSync(
   join(fromFileUrl(dirname(Deno.mainModule)), "./input"),
 );
-// console.log(`any bad: ${data.includes("\r")}`);
+// console.log(`any bad: ${data.includes("")}`);
 const lines = data.split("\n").slice(0, -1);
 // console.log(`any blank: ${lines.filter((a) => a.trim().length === 0).length}`);
 
