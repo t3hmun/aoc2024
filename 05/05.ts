@@ -48,13 +48,54 @@ function checkUpdate(update: number[]) {
 
 let part1 = 0;
 
+const needFixing = [];
+
 for (const update of updates) {
   const ok = checkUpdate(update);
   //console.log(update, ": ", ok);
   if (ok) {
     const mid = update[Math.floor(update.length / 2)];
     part1 += mid;
+  } else {
+    needFixing.push(update);
   }
 }
 
 console.log(`Part1: ${part1}`);
+
+function tryFix(update: number[]) {
+  for (let i = 0; i < update.length; i++) {
+    // numbers that are forbidden before update[i]
+    const iRules = rDict[update[i]];
+    if (iRules === undefined) continue;
+    // look at pages before update[i] and see if they match the forbidden pages.
+    for (let j = 0; j < i; j++) {
+      for (const rule of iRules) {
+        if (update[j] === rule) {
+          const temp = update[i];
+          update[i] = update[j];
+          update[j] = temp;
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+let part2 = 0;
+
+for (const nf of needFixing) {
+  // Feels inefficient but it works, instantly on my computer, so good enough.
+  while (true) {
+    const fixed = tryFix(nf);
+    if (fixed) {
+      const mid = nf[Math.floor(nf.length / 2)];
+      part2 += mid;
+
+      break;
+    }
+  }
+}
+
+console.log(`Part2: ${part2}`);
