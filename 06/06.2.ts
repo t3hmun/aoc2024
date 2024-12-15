@@ -1,7 +1,7 @@
 import { dirname, fromFileUrl, join } from "https://deno.land/std/path/mod.ts";
 
 const data = Deno.readTextFileSync(
-  fromFileUrl(join(dirname(Deno.mainModule), "test")),
+  fromFileUrl(join(dirname(Deno.mainModule), "special")),
 );
 
 const map: Array<number[]> = [];
@@ -49,17 +49,17 @@ function dirToStr(n: number) {
   if (n === RIGHTMASK) return "→";
   if (n === DOWNMASK) return "↓";
   if (n === LEFTMASK) return "←";
-  if (n === (UPMASK | RIGHTMASK)) return "└";
-  if (n === (UPMASK | LEFTMASK)) return "┘";
-  if (n === (DOWNMASK | RIGHTMASK | LEFTMASK)) return "┴";
-  if (n === (UPMASK | DOWNMASK)) return "│";
-  if (n === (UPMASK | RIGHTMASK | DOWNMASK)) return "├";
-  if (n === (UPMASK | LEFTMASK | DOWNMASK)) return "┤";
+  if (n === (UPMASK | RIGHTMASK)) return "┼";
+  if (n === (UPMASK | LEFTMASK)) return "┼";
+  if (n === (DOWNMASK | RIGHTMASK | LEFTMASK)) return "┼";
+  if (n === (UPMASK | DOWNMASK)) return "↕";
+  if (n === (UPMASK | RIGHTMASK | DOWNMASK)) return "┼";
+  if (n === (UPMASK | LEFTMASK | DOWNMASK)) return "┼";
   if (n === (UPMASK | RIGHTMASK | LEFTMASK | DOWNMASK)) return "┼";
-  if (n === (DOWNMASK | RIGHTMASK)) return "┌";
-  if (n === (DOWNMASK | LEFTMASK)) return "┐";
-  if (n === (DOWNMASK | RIGHTMASK | LEFTMASK)) return "┬";
-  if (n === (RIGHTMASK | LEFTMASK)) return "─";
+  if (n === (DOWNMASK | RIGHTMASK)) return "┼";
+  if (n === (DOWNMASK | LEFTMASK)) return "┼";
+  if (n === (DOWNMASK | RIGHTMASK | LEFTMASK)) return "┼";
+  if (n === (RIGHTMASK | LEFTMASK)) return "↔";
 }
 
 const height = map.length;
@@ -85,12 +85,12 @@ function evaluateMove(
     return true;
   }
 
-  map[move.y][move.x] = map[move.y][move.x] | dir;
+  map[location.y][location.x] = map[location.y][location.x] | dir;
 
   location = move;
   const remap = map.map((r) => r.map((c) => dirToStr(c)).join("")).join("\n");
   //console.clear();
-  block(100);
+  block(200);
   console.log(); // gap for printing direction.
   console.log(remap);
   console.log(`\x1b[${height + 2}A`);
