@@ -45,6 +45,12 @@ let counter = 1;
 let location = start;
 let fn = up;
 
+function block(ms: number) {
+  if (ms === 0) return;
+  const start = Date.now();
+  while (Date.now() - start < ms);
+}
+
 function evaluateMove(move: { x: number; y: number }, next: () => boolean) {
   const is = map[move.y][move.x];
   if (is === 1) {
@@ -60,12 +66,18 @@ function evaluateMove(move: { x: number; y: number }, next: () => boolean) {
   }
   location = move;
   const remap = map.map((r) => r.map((c) => reDict[c]).join("")).join("\n");
+  //console.clear();
+  block(1);
+  console.log(); // gap for printing direction.
   console.log(remap);
+  console.log(`\x1b[${height + 2}A`);
+
   return true;
 }
 
 function up() {
   console.log("up");
+  console.log(`\x1b[2A`); // move up twice because this add another newline (should have used Deno.stdout.writeSync)
   const move = { x: location.x, y: location.y - 1 };
 
   if (move.y < 0) return false;
@@ -75,6 +87,7 @@ function up() {
 
 function right() {
   console.log("right");
+  console.log(`\x1b[2A`);
   const move = { x: location.x + 1, y: location.y };
 
   if (move.x >= width) return false;
@@ -84,6 +97,7 @@ function right() {
 
 function down() {
   console.log("down");
+  console.log(`\x1b[2A`);
   const move = { x: location.x, y: location.y + 1 };
 
   if (move.y >= height) return false;
@@ -93,6 +107,7 @@ function down() {
 
 function left() {
   console.log("left");
+  console.log(`\x1b[2A`);
   const move = { x: location.x - 1, y: location.y };
 
   if (move.x < 0) return false;
@@ -102,7 +117,10 @@ function left() {
 
 while (fn());
 
-const remap = map.map((r) => r.map((c) => reDict[c]).join("")).join("\n");
-console.log(remap);
+// Move cursor to the bottom again.
+for (let i = 0; i < height + 2; i++) console.log();
 
-console.log(`Part 2: ${counter}`);
+// const remap = map.map((r) => r.map((c) => reDict[c]).join("")).join("\n");
+// console.log(remap);
+
+console.log(`Part 1: ${counter}`);
