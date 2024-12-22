@@ -60,3 +60,39 @@ for (const ant in antennaGroup) {
   }
 }
 console.log(`Part 1: ${uniqueLoc.size}`);
+
+const part2: Set<number> = new Set();
+
+function checkBounds(row: number, col: number) {
+  if (row >= 0 && row < height && col >= 0 && col < width) {
+    return true;
+  }
+  return false;
+}
+
+for (const ant in antennaGroup) {
+  const locs = antennaGroup[ant];
+  for (const a of locs) {
+    for (const b of locs) {
+      if (a === b) continue;
+      const rDiff = getRow(a) - getRow(b);
+      const cDiff = getCol(a) - getCol(b);
+      let r = getRow(a);
+      let c = getCol(a);
+      while (checkBounds(r, c)) {
+        r -= rDiff;
+        c -= cDiff;
+      }
+      r += rDiff;
+      c += cDiff;
+      while (checkBounds(r, c)) {
+        const rc = setRowCol(r, c);
+        part2.add(rc);
+        r += rDiff;
+        c += cDiff;
+      }
+    }
+  }
+}
+
+console.log(`Part 2: ${part2.size}`);
