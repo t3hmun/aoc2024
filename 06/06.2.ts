@@ -1,7 +1,9 @@
+// This solution has cool console animations, bitwise maths.
+
 import { dirname, fromFileUrl, join } from "https://deno.land/std/path/mod.ts";
 
 const data = Deno.readTextFileSync(
-  fromFileUrl(join(dirname(Deno.mainModule), "special")),
+  fromFileUrl(join(dirname(Deno.mainModule), "input")),
 );
 
 const map: Array<number[]> = [];
@@ -31,7 +33,7 @@ for (let i = 0; i < data.length - 1; i++) {
     if (c === ".") val = EMPTY; // not vistited
     else if (c === "#") val = WALL; // wall
     else if (c === "^") {
-      val = UPMASK; // visited
+      val = EMPTY; // visited
       start = { x: i - completeRowsLen, y: row };
     } else throw Error("unexpexted char: ");
     sar.push(val);
@@ -73,75 +75,147 @@ function block(ms: number) {
   while (Date.now() - start < ms);
 }
 
-function evaluateMove(
-  move: { x: number; y: number },
-  next: () => boolean,
-  dir: number,
-) {
-  const is = map[move.y][move.x];
-  if (is === WALL) {
-    // tried to move into a wall, use the next movement function.
-    fn = next;
-    return true;
-  }
+type XY = { x: number; y: number };
 
-  map[location.y][location.x] = map[location.y][location.x] | dir;
+let disableDraw = false;
 
-  location = move;
-  const remap = map.map((r) => r.map((c) => dirToStr(c)).join("")).join("\n");
+function drawMap() {
+  if (disableDraw) return;
+  const remap = map.map((r) => r.map((c) => dirToStr(c)).join("")).map((l, i) =>
+    l + i
+  ).join("\n");
   //console.clear();
-  block(200);
+  block(0);
   console.log(); // gap for printing direction.
   console.log(remap);
   console.log(`\x1b[${height + 2}A`);
+}
 
-  return true;
+const DIDWALL = 2;
+const DIDMOVE = 1;
+const DIDEXIT = 0;
+const DIDLOOP = -1;
+function evaluateMove(
+  move: XY,
+  next: () => number,
+  dir: number,
+): number {
+  // Off the edge, log the final move.
+  if (move.x < 0 || move.x >= width || move.y < 0 || move.y >= height) {
+    map[location.y][location.x] = map[location.y][location.x] | dir;
+    drawMap();
+    return DIDEXIT;
+  }
+
+  const is = map[move.y][move.x];
+
+  if (is === WALL) {
+    // tried to move into a wall, use the next movement function.
+    fn = next;
+    return DIDWALL;
+  }
+  const locationValue = map[location.y][location.x];
+  const newValue = locationValue | dir;
+  if (locationValue === newValue) {
+    // The location did not add new a direction move, which means it is now looping.
+    drawMap();
+    return DIDLOOP;
+  }
+  map[location.y][location.x] = newValue;
+
+  location = move;
+
+  drawMap();
+
+  return DIDMOVE;
 }
 
 function up() {
-  console.log("up");
-  console.log(`\x1b[2A`); // move up twice because this add another newline (should have used Deno.stdout.writeSync)
   const move = { x: location.x, y: location.y - 1 };
-
-  if (move.y < 0) return false;
 
   return (evaluateMove(move, right, UPMASK));
 }
 
 function right() {
-  console.log("right");
-  console.log(`\x1b[2A`);
   const move = { x: location.x + 1, y: location.y };
-
-  if (move.x >= width) return false;
 
   return (evaluateMove(move, down, RIGHTMASK));
 }
 
 function down() {
-  console.log("down");
-  console.log(`\x1b[2A`);
   const move = { x: location.x, y: location.y + 1 };
-
-  if (move.y >= height) return false;
 
   return (evaluateMove(move, left, DOWNMASK));
 }
 
 function left() {
-  console.log("left");
-  console.log(`\x1b[2A`);
   const move = { x: location.x - 1, y: location.y };
-
-  if (move.x < 0) return false;
 
   return (evaluateMove(move, up, LEFTMASK));
 }
 
-while (fn());
+function gx(xy: number) {
+  return xy >> 16;
+}
+
+function gy(xy: number) {
+  return xy & 0xFFFF;
+}
+
+function sxy(x: number, y: number) {
+  return (x << 16) | y;
+}
+
+const blockable: Set<number> = new Set();
+
+while (true) {
+  const result = fn();
+  if (result <= 0) break;
+  // This should keep every location except for the first
+  if (result === DIDMOVE) blockable.add(sxy(location.x, location.y));
+}
 
 // Move cursor to the bottom again.
 for (let i = 0; i < height + 2; i++) console.log();
 
 // const remap = map.map((r) => r.map((c) => reDict[c]).join("")).join("\n");
 // console.log(remap);
+
+console.log("blockables");
+console.log([...blockable].map((p) => ({ x: gx(p), y: gy(p) })));
+
+function resetMap() {
+  // Iterate map
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      map[y][x] = map[y][x] & 0x0F;
+    }
+  }
+}
+
+let loops = 0;
+
+disableDraw = true;
+
+for (const p of blockable) {
+  resetMap();
+  map[gy(p)][gx(p)] = WALL;
+  location = start;
+  fn = up;
+  drawMap();
+  while (true) {
+    const result = fn();
+    if (result === DIDLOOP) {
+      loops++;
+      break;
+    }
+    if (result === DIDEXIT) break;
+  }
+  map[gy(p)][gx(p)] = EMPTY;
+  disableDraw = false;
+  drawMap();
+  disableDraw = true;
+}
+for (let i = 0; i < height + 2; i++) console.log();
+
+console.log(`Part 2: ${loops}`);
