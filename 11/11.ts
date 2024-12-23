@@ -1,97 +1,69 @@
 import { dirname, fromFileUrl, join } from "https://deno.land/std/path/mod.ts";
 
-const test = false;
-
-const file = test ? "test" : "input";
-const repeats = test ? 6 : 25;
-
 const data = Deno.readTextFileSync(
-  fromFileUrl(join(dirname(Deno.mainModule), file)),
+  fromFileUrl(join(dirname(Deno.mainModule), "input")),
 ).replaceAll("\n", "");
 
-type Stone = {
-  val: number;
-  next?: Stone;
-};
+// Order doesn't change.. but actually it is never considered at all; which means order does not exist.
 
 const nums = data.split(" ").map(Number);
-console.log(nums);
+let calls = 0;
+const step = 100000000;
+let target = step;
+let start = Date.now();
+function report() {
+  calls++;
+  if (calls >= target) {
+    target += step;
 
-function init() {
-  let f: Stone | undefined = undefined;
-  let prev: Stone | undefined = undefined;
-
-  for (const n of nums) {
-    const s: Stone = { val: n, next: undefined };
-    if (prev !== undefined) {
-      prev.next = s;
-    } else {
-      f = s;
-    }
-    prev = s;
-  }
-  if (f === undefined) throw ("first null!");
-  return f;
-}
-
-const first = init();
-
-function flatten() {
-  let curr = first;
-  const vals = [];
-  while (true) {
-    vals.push(curr.val);
-    if (curr.next === undefined) break;
-    curr = curr.next;
-  }
-  console.log(vals.join(" "));
-}
-
-flatten();
-
-// with --v8-flags=--max-old-space-size=8192 this complete 39 blinks with a count of 111,926,276 before the heap fills up.
-// This is not the solution.
-function blink() {
-  let curr = first;
-  while (true) {
-    const next = curr?.next;
-    if (curr.val === 0) {
-      curr.val = 1;
-    } else {
-      const str = String(curr.val);
-      if ((str.length & 1) === 0) {
-        const left = Number(str.slice(0, str.length / 2));
-        const right = Number(str.slice(str.length / 2));
-        const rstone = { val: right, next: curr.next };
-        curr.val = left;
-        curr.next = rstone;
-      } else {
-        curr.val = curr.val * 2024;
-      }
-    }
-
-    if (next === undefined) break;
-    curr = next;
+    console.log(
+      `Called ${calls / 1000000000}bil times, ${step} in ${
+        Date.now() - start
+      }ms.`,
+    );
+    start = Date.now();
   }
 }
 
-function count() {
-  let curr = first;
-  let total = 0;
-  while (true) {
-    total += 1;
-    if (curr.next === undefined) break;
-    curr = curr.next;
+function Solve(
+  val: number,
+  blinks: number,
+  limit: number,
+): number {
+  if (blinks > limit) return 1;
+  report();
+  if (val === 0) return Solve(1, blinks + 1, limit);
+  const str = String(val);
+  const len = str.length;
+  if ((len & 1) === 0) {
+    let lrTotal = 0;
+    const left = Number(str.slice(0, len / 2));
+    const right = Number(str.slice(len / 2));
+    lrTotal += Solve(left, blinks + 1, limit);
+    lrTotal += Solve(right, blinks + 1, limit);
+    return lrTotal;
   }
-  return total;
+  return Solve(val * 2024, blinks + 1, limit);
 }
 
-console.log("start");
-for (let i = 0; i < 75; i++) {
-  console.log(`${(new Date().toISOString())}: Blink ${i}`);
-  blink();
-  console.log(`${(new Date().toISOString())}: Counting...`);
-  console.log(`${(new Date().toISOString())}: Count: ${count()}`);
+let part1 = 0;
+for (const num of nums) {
+  const count = Solve(num, 1, 25);
+  part1 += count;
 }
 
-console.log(`Part 1: ${count()}`);
+console.log(`Calls: ${calls}`);
+console.log(`Part1: ${part1}`);
+
+let part2 = 0;
+calls = 0;
+target = step;
+start = Date.now();
+for (const num of nums) {
+  const now = Date.now();
+  const count = Solve(num, 1, 75);
+  console.log(`${num} solved in ${Date.now() - now}ms`);
+  part2 += count;
+}
+console.log(`Calls: ${calls}`);
+console.log(`Part2: ${part2}`);
