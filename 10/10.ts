@@ -31,16 +31,21 @@ function search(row: number, col: number, val: number) {
 
 const width = map[0].length;
 const height = map.length;
-const scores: number[] = [];
+const p1Scores: number[] = [];
+const p2Scores: number[] = [];
 for (let row = 0; row < height; row++) {
   for (let col = 0; col < width; col++) {
     const loc = map[row][col];
     if (loc !== 0) continue;
     console.log();
-    const score = new Set(search(row, col, -1)).size;
-    scores.push(score);
+    const routes = search(row, col, -1);
+    const p1Score = new Set(routes).size;
+    const p2Score = routes.length;
+    p1Scores.push(p1Score);
+    p2Scores.push(p2Score);
   }
 }
 
-console.log(scores);
-console.log(`Part 1: ${scores.reduce((a, c) => a + c)}`);
+console.log(p1Scores);
+console.log(`Part 1: ${p1Scores.reduce((a, c) => a + c)}`);
+console.log(`Part 2: ${p2Scores.reduce((a, c) => a + c)}`);
