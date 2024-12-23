@@ -49,6 +49,8 @@ function flatten() {
 
 flatten();
 
+// with --v8-flags=--max-old-space-size=8192 this complete 39 blinks with a count of 111,926,276 before the heap fills up.
+// This is not the solution.
 function blink() {
   let curr = first;
   while (true) {
@@ -85,9 +87,11 @@ function count() {
 }
 
 console.log("start");
-for (let i = 0; i < repeats; i++) {
+for (let i = 0; i < 75; i++) {
+  console.log(`${(new Date().toISOString())}: Blink ${i}`);
   blink();
-  //flatten();
+  console.log(`${(new Date().toISOString())}: Counting...`);
+  console.log(`${(new Date().toISOString())}: Count: ${count()}`);
 }
 
 console.log(`Part 1: ${count()}`);
